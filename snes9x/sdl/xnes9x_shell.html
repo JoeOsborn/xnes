@@ -91,8 +91,13 @@
       var spinnerElement = document.getElementById('spinner');
 
       var Module = {
-        preRun: [],
+        preRun: [
+            function() {
+                shuffleFiles();
+            }
+        ],
         postRun: [],
+        arguments: [],
         print: (function() {
           var element = document.getElementById('output');
           if (element) element.value = ''; // clear browser cache
@@ -164,65 +169,7 @@
       };
     </script>
     {{{ SCRIPT }}}
-    
-    
-       <script type="text/javascript">
-           cout_print = Module.print
-	   frameskip=0	   
-	   frameskip_text=document.getElementById("frameskip")	   
-	   frameskip_text.value=frameskip
-	   snes_transparency=1
-	   function ToggleTransparency(){
-		snes_transparency=!snes_transparency
-		Module._set_transparency(snes_transparency)		  	      
-	      cout_print("Transparency is now "+(snes_transparency ? "on" : "off"))
-	   }	   
-    </script>
-    <script>           
-            if (window.File && window.FileReader && window.FileList && window.Blob) {
-	    } else {
-	        alert('The File APIs are not fully supported in this browser.')
-                cout_print('The File APIs are not fully supported in this browser.');
-	    }
-           function frameskip_adjust(n){
-	      frameskip+=n
-	      if(frameskip<0) frameskip=0
-	      frameskip_text.value=frameskip
-	      set_frameskip(frameskip);
-           }
-           function snes_readfile(controller){
-	      var f=controller.files[0]
-	      cout_print(f.name)
-	      var reader= new FileReader()
-	      reader.onprogress = function(e){
-		if (e.lengthComputable){
-		    cout_print(Math.round((e.loaded / e.total) * 100)+"%")
-		}
-		else
-		  count_print(e.loaded+"bytes")
-		document.getElementById("start").disabled=false
-		
-	      }
-	      reader.onload = function(e) {		 
-		  cout_print("_.smc loaded")		  
-		  Module.FS_createDataFile("/", "_.smc", new Uint8Array(this.result) , true, true);
-		}	      
-              reader.readAsArrayBuffer(f)
-           }           
-           function snes_main(){            
-            set_frameskip=Module.cwrap('set_frameskip', 'number', ['number'])
-	    ToggleDisplayFramerate = Module._toggle_display_framerate
-           document.getElementById("start").disabled=true                  
-	   reboot_romnum=-1	  	   
-	   frames=0
-	   fps_text=document.getElementById("fps")
-           frameskipped=0
-	   Module._run();
-           }
-           
-    </script>
     <div>
-    <p> .smc rom are needed in order to play.  </p>
     Keys are mapped as followings, you may need to click on the canvas or click the full screen button to let the canvas get the focus.
 <code>
 <pre>
@@ -241,5 +188,20 @@
 </pre>
 </code>
     <div>
+          <script>
+          var saved;
+          function testSave() {
+              console.log("let's save");
+              saveState(function(s){ console.log("Saved",s,Date.now()); saved=s; });
+          }
+          function testLoad() {
+              if(!saved) { return; }
+              console.log("let's load",saved);
+              loadState(saved,function(s) { console.log("Loaded",s,Date.now()); });
+          }
+          
+          </script>
+          <a onClick="testSave();">Save State</a>
+          <a onClick="testLoad();">Load State</a>
   </body>
 </html>

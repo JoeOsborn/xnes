@@ -1180,12 +1180,13 @@ bool8 S9xFreezeGame (const char *filename)
 
 		S9xResetSaveTimer(TRUE);
 
+#ifdef FANCY
 		const char *base = S9xBasename(filename);
 		if (S9xMovieActive())
 			sprintf(String, MOVIE_INFO_SNAPSHOT " %s", base);
 		else
 			sprintf(String, SAVE_INFO_SNAPSHOT " %s", base);
-
+#endif
 		S9xMessage(S9X_INFO, S9X_FREEZE_FILE_INFO, String);
 
 		return (TRUE);
@@ -1245,6 +1246,7 @@ bool8 S9xUnfreezeGame (const char *filename)
 			return (FALSE);
 		}
 
+#ifdef FANCY
 		if (S9xMovieActive())
 		{
 			if (S9xMovieReadOnly())
@@ -1254,7 +1256,7 @@ bool8 S9xUnfreezeGame (const char *filename)
 		}
 		else
 			sprintf(String, SAVE_INFO_LOAD " %s", base);
-
+#endif
 		S9xMessage(S9X_INFO, S9X_FREEZE_FILE_INFO, String);
 
 		return (TRUE);
@@ -1390,6 +1392,7 @@ void S9xFreezeToStream (STREAM stream)
 		delete ssi;
 	}
 
+#ifdef FANCY
 	if (S9xMovieActive())
 	{
 		uint8	*movie_freeze_buf;
@@ -1407,7 +1410,7 @@ void S9xFreezeToStream (STREAM stream)
 			delete [] movie_freeze_buf;
 		}
 	}
-
+#endif
 	S9xSetSoundMute(FALSE);
 
 	delete [] soundsnapshot;
@@ -1571,30 +1574,36 @@ int S9xUnfreezeFromStream (STREAM stream)
 		result = UnfreezeStruct(stream, "MOV", &mi, SnapMovie, COUNT(SnapMovie), version);
 		if (result != SUCCESS)
 		{
+#ifdef FANCY
 			if (S9xMovieActive())
 			{
 				result = NOT_A_MOVIE_SNAPSHOT;
 				break;
 			}
+#endif
 		}
 		else
 		{
 			result = UnfreezeBlockCopy(stream, "MID", &local_movie_data, mi.MovieInputDataSize);
 			if (result != SUCCESS)
 			{
+#ifdef FANCY
 				if (S9xMovieActive())
 				{
 					result = NOT_A_MOVIE_SNAPSHOT;
 					break;
 				}
+#endif
 			}
 
+#ifdef FANCY
 			if (S9xMovieActive())
 			{
 				result = S9xMovieUnfreeze(local_movie_data, mi.MovieInputDataSize);
 				if (result != SUCCESS)
 					break;
 			}
+#endif
 		}
 
 		result = SUCCESS;
@@ -1766,7 +1775,9 @@ int S9xUnfreezeFromStream (STREAM stream)
 			bool8			pad_read_temp = pad_read;
 
 			pad_read = pad_read_last;
+#ifdef FANCY
 			S9xUpdateFrameCounter(-1);
+#endif
 			pad_read = pad_read_temp;
 		}
 

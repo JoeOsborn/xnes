@@ -53,8 +53,8 @@
 #include "apu/apu.h"
 #include "gfx.h"
 #include "controls.h"
-#ifdef FANCY
 #include "snapshot.h"
+#ifdef FANCY
 #include "cheats.h"
 #include "logger.h"
 #include "conffile.h"
@@ -67,7 +67,8 @@
 
 
 static const char	*s9x_base_dir        = NULL,
-					*rom_filename        = "_.smc";
+					*rom_filename        = "rom.smc",
+          *snapshot_filename   = "state.frz";
 
 extern uint32           sound_buffer_size; // used in sdlaudio
 
@@ -429,13 +430,18 @@ const char * S9xChooseFilename (bool8 read_only)
 bool8 S9xOpenSnapshotFile (const char *filename, bool8 read_only, STREAM *file)
 {
     printf("open snapshotfile\n");
+    if((*file = OPEN_STREAM(filename, (read_only ? "r" : "w"))) != 0) {
+      return TRUE;
+    }
     return FALSE;
 }
 
 void S9xCloseSnapshotFile (STREAM file)
 {
     printf("close snapshotfile\n");
-	//CLOSE_STREAM(file);
+    if(CLOSE_STREAM(file) != 0) {
+      printf("failed to close snapshotfile");
+    }
 }
 
 bool8 S9xInitUpdate (void)
@@ -562,74 +568,23 @@ void S9xParseArg (char **argv, int &i, int argc){
 
 
 #ifdef HTML
-extern "C" void toggle_display_framerate() __attribute__((used));
-extern "C" void run() __attribute__((used));
-extern "C" int set_frameskip(int) __attribute__((used));
-int set_frameskip(int n){
-Settings.SkipFrames = n;
-return n;    
+extern "C" void freeze() __attribute__((used));
+extern "C" void unfreeze() __attribute__((used));
+extern "C" void freeze() {
+    S9xFreezeGame(snapshot_filename);
 }
-void toggle_display_framerate(){
-
-    Settings.DisplayFrameRate = !Settings.DisplayFrameRate;
+extern "C" void unfreeze() {
+    S9xUnfreezeGame(snapshot_filename);
 }
 void mainloop(){
     S9xProcessEvents(FALSE);
     S9xMainLoop();    
 }
-void reboot_emulator(char *filename){
-    	uint32	saved_flags = CPU.Flags;
-	bool8	loaded = FALSE;
-	
-		loaded = Memory.LoadROM(filename);
-
-	if (!loaded)
-	{
-		fprintf(stderr, "Error opening the ROM file. %s\n", filename);
-		exit(1);
-	}
-
-	NSRTControllerSetup();
-
-	CPU.Flags = saved_flags;
-	Settings.StopEmulation = FALSE;
-
-	S9xInitInputDevices();
-	S9xInitDisplay(NULL, NULL);
-	sprintf(String, "\"%s\" %s: %s", Memory.ROMName, TITLE, VERSION);
-
-    S9xSetTitle(String);
-#ifdef SOUND    
-	S9xSetSoundMute(FALSE);
-#else
-    S9xSetSoundMute(TRUE);
-#endif    
-}
-extern "C" void* set_transparency(int i) __attribute__((used));
-void* set_transparency(int i){
-    Settings.Transparency=i;
-    return (void *)&Settings;
-}
-void run(){
-    reboot_emulator("_.smc");
-    #ifdef SOUND
-    printf("S9xSetSoundMute(FALSE)\n");
-    S9xSetSoundMute(FALSE);
-    #else
-    printf("S9xSetSoundMute(TRUE)\n");
-    S9xSetSoundMute(TRUE);
-    #endif
-    printf("start main loop");
-    emscripten_set_main_loop(mainloop, 0, 0);
-}
-
-
 #endif
 
 
 int main (int argc, char **argv)
 {	
-    int iters;
 	printf("\n\nSnes9x " VERSION " for unix/SDL\n");
 
 	snprintf(default_dir, PATH_MAX + 1, "%s%s%s", getenv("HOME"), SLASH_STR, ".snes9x");
@@ -691,24 +646,22 @@ int main (int argc, char **argv)
 #endif
 
 
-	// domaemon: setting the title on the window bar
-	
-#ifdef HTML
-       emscripten_exit_with_live_runtime();
-#else
-    	uint32	saved_flags = CPU.Flags;
-	bool8	loaded = FALSE;
 
-	if (rom_filename)
-	{
-		loaded = Memory.LoadROM(rom_filename);
-	}
+  uint32	saved_flags = CPU.Flags;
+	bool8	loaded = FALSE;
+  
+	loaded = Memory.LoadROM(rom_filename);
 
 	if (!loaded)
 	{
 		fprintf(stderr, "Error opening the ROM file.\n");
 		exit(1);
 	}
+  
+  bool unfrozen = S9xUnfreezeGame(snapshot_filename);
+  if(!unfrozen) {
+    fprintf(stderr, "Error opening the save state, or no save state provided.\n");
+  }
 
 	NSRTControllerSetup();
 
@@ -727,7 +680,10 @@ int main (int argc, char **argv)
 #endif    
     printf("before start\n");
     printf("registers.pcw=%x\n", Registers.PCw);    
-	for(iters=0;iters<5000;iters++)
+#ifdef HTML
+    emscripten_set_main_loop(mainloop,0,1);
+#else
+	for(int iters=0;iters<5000;iters++)
 	{
 
         S9xMainLoop();
