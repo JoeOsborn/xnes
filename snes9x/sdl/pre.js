@@ -1,19 +1,43 @@
-window['shuffleFiles'] = function() {
-    FS.writeFile("state.frz", FS.readFile("state0.frz", {encoding:'binary'}), {encoding:'binary'});
-    FS.chmod("state.frz",0777);
-}
-
-window['saveState'] = function(onSaved) {
+Module['saveState'] = function(onSaved) {
     gamecip_freeze();
-    onSaved(FS.readFile("state.frz", {encoding:'binary'}));
+    if(onSaved) {
+        onSaved(FS.readFile("/state.frz", {encoding:'binary'}));
+    }
 }
 
-window['loadState'] = function(s, onLoaded) {
-    //load s in place of "state.frz"
-    FS.writeFile("state.frz", s, {encoding:'binary'});
-    gamecip_unfreeze();
-    onLoaded(s);
+Module['saveExtraFiles'] = function(onSaved) {
+    gamecip_saveSRAM();
+    if(onSaved) {
+        onSaved({"battery": FS.readFile("/rom.srm", {encoding:'binary'})});
+    }
 }
+
+Module['loadState'] = function(s, onLoaded) {
+    //load s in place of "state.frz"
+    FS.writeFile("/state.frz", s, {encoding:'binary'});
+    gamecip_unfreeze();
+    if(onLoaded) {
+        onLoaded(s);
+    }
+}
+
+Module.preRun.push(function() {
+    var gameFile = Module["gameFile"];
+    var freezeFile = Module["freezeFile"];
+    var extraFiles = Module["extraFiles"] || {};
+    //todo: handle .sfc?
+    FS.createPreloadedFile("/", "rom.smc", gameFile, true, true);
+    if(freezeFile) {
+        FS.createPreloadedFile("/", "state0.frz", freezeFile, true, true);
+        FS.createPreloadedFile("/", "state.frz", freezeFile, true, true);
+    }
+    if("battery" in extraFiles) {
+        FS.createPreloadedFile("/", "rom.srm", extraFiles["battery"], true, true);
+    }
+});
+
+// The junk below is to save the emscripten heap and everything. it's not
+// necessary if the emulator already has savestate support!
 
 // function maybeSaveState() {
 //     if(awaitingSaveCallback) {

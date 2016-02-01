@@ -6,15 +6,13 @@ INCLUDES="-I. -I.. -I../apu/"
 CCFLAGS="-U__linux -O3 -DLSB_FIRST  -fomit-frame-pointer -fno-exceptions -fno-rtti -pedantic -Wall -W -Wno-unused-parameter -I/usr/include/SDL -D_GNU_SOURCE=1 -D_REENTRANT -DHAVE_MKSTEMP -DHAVE_STRINGS_H -DHAVE_SYS_IOCTL_H -DHAVE_STDINT_H -DRIGHTSHIFT_IS_SAR" 
 
 if [ ! -e "internals.bc" ]; then
-  emcc -O3 -s EXPORTED_FUNCTIONS="['_main', '_freeze', '_unfreeze' ]" \
+  emcc -O3 -s EXPORTED_FUNCTIONS="['_main', '_freeze', '_unfreeze', '_saveSRAM' ]" \
   -o internals.bc -DUSE_SDL -DHTML $INCLUDES $CCFLAGS $OBJECTS -s TOTAL_MEMORY=34777216 -DSOUND
 fi
 
-emcc -O3 -s EXPORTED_FUNCTIONS="['_main', '_freeze', '_unfreeze' ]" --pre-js pre.js --post-js post.js \
- --preload-file "$1"@/rom.smc --preload-file "$2"@/state0.frz \
- --shell-file xnes9x_shell.html \
- -o $OUT/snes9x.html -DUSE_SDL -DHTML $INCLUDES $CCFLAGS internals.bc sdlmain.cpp -lm -lSDL -s TOTAL_MEMORY=34777216 -DSOUND \
-# --closure 1\
-
+emcc -O3 -s EXPORTED_FUNCTIONS="['_main', '_freeze', '_unfreeze', '_saveSRAM' ]" --pre-js pre.js --post-js post.js \
+ -s MODULARIZE=1 -s EXPORT_NAME=\"'SNES9X'\" -s 'EXTRA_EXPORTED_RUNTIME_METHODS=["FS"]' \
+ -o $OUT/snes9x.js -DUSE_SDL -DHTML $INCLUDES $CCFLAGS internals.bc sdlmain.cpp -lm -lSDL -s TOTAL_MEMORY=34777216 -DSOUND \
+# --closure 1
 
 

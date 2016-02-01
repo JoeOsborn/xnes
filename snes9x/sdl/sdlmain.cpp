@@ -68,6 +68,7 @@
 
 static const char	*s9x_base_dir        = NULL,
 					*rom_filename        = "rom.smc",
+					*battery_filename    = "rom.srm",
           *snapshot_filename   = "state.frz";
 
 extern uint32           sound_buffer_size; // used in sdlaudio
@@ -570,11 +571,15 @@ void S9xParseArg (char **argv, int &i, int argc){
 #ifdef HTML
 extern "C" void freeze() __attribute__((used));
 extern "C" void unfreeze() __attribute__((used));
+extern "C" void saveSRAM() __attribute__((used));
 extern "C" void freeze() {
     S9xFreezeGame(snapshot_filename);
 }
 extern "C" void unfreeze() {
     S9xUnfreezeGame(snapshot_filename);
+}
+extern "C" void saveSRAM() {
+    Memory.SaveSRAM(battery_filename);
 }
 void mainloop(){
     S9xProcessEvents(FALSE);
@@ -651,6 +656,7 @@ int main (int argc, char **argv)
 	bool8	loaded = FALSE;
   
 	loaded = Memory.LoadROM(rom_filename);
+  Memory.LoadSRAM(battery_filename);
 
 	if (!loaded)
 	{
