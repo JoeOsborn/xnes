@@ -572,6 +572,8 @@ void S9xParseArg (char **argv, int &i, int argc){
 extern "C" void freeze() __attribute__((used));
 extern "C" void unfreeze() __attribute__((used));
 extern "C" void saveSRAM() __attribute__((used));
+extern "C" void pauseAudio(int) __attribute__((used));
+
 extern "C" void freeze() {
     S9xFreezeGame(snapshot_filename);
 }
@@ -580,6 +582,9 @@ extern "C" void unfreeze() {
 }
 extern "C" void saveSRAM() {
     Memory.SaveSRAM(battery_filename);
+}
+extern "C" void pauseAudio(int n) {
+    SDL_PauseAudio(n);
 }
 void mainloop(){
     S9xProcessEvents(FALSE);

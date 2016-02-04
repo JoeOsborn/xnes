@@ -5,10 +5,18 @@ Module['saveState'] = function(onSaved) {
     }
 }
 
-Module['saveExtraFiles'] = function(onSaved) {
+Module['saveExtraFiles'] = function(files, onSaved) {
     gamecip_saveSRAM();
     if(onSaved) {
-        onSaved({"battery": FS.readFile("/rom.srm", {encoding:'binary'})});
+        var r = {};
+        for(var i = 0; i < files.length; i++) {
+            if(files[i] == "battery") {
+                r["battery"] = FS.readFile("/rom.srm", {encoding:'binary'});
+            } else if(files[i] == "state") {
+                r["state"] = FS.readFile("/state.frz", {encoding:'binary'});
+            }
+        }
+        onSaved(r);
     }
 }
 
@@ -21,7 +29,17 @@ Module['loadState'] = function(s, onLoaded) {
     }
 }
 
+Module['setMuted'] = function(b) {
+    gamecip_PauseAudio(b ? 1 : 0);
+    Module._isMuted = b;
+}
+
+Module['isMuted'] = function() {
+    return Module._isMuted;
+}
+
 Module.preRun.push(function() {
+    ENV.SDL_EMSCRIPTEN_KEYBOARD_ELEMENT = Module.targetID;
     var gameFile = Module["gameFile"];
     var freezeFile = Module["freezeFile"];
     var extraFiles = Module["extraFiles"] || {};
@@ -35,6 +53,10 @@ Module.preRun.push(function() {
         FS.createPreloadedFile("/", "rom.srm", extraFiles["battery"], true, true);
     }
 });
+
+Module.postRun.push(function() {
+    Module.setMuted(true);
+})
 
 // The junk below is to save the emscripten heap and everything. it's not
 // necessary if the emulator already has savestate support!
