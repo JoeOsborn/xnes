@@ -60,6 +60,8 @@ Module.preRun.push(function() {
 
 Module.postRun.push(function() {
     Module.setMuted(true);
+    Module.canvas.style.setProperty( "width", "inherit", "important");
+    Module.canvas.style.setProperty("height", "inherit", "important");
 })
 
 // The junk below is to save the emscripten heap and everything. it's not
