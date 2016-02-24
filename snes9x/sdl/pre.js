@@ -38,6 +38,10 @@ Module['isMuted'] = function() {
     return Module._isMuted;
 }
 
+Module['listExtraFiles'] = function() {
+    return ["battery", "state"];
+}
+
 Module.preRun.push(function() {
     ENV.SDL_EMSCRIPTEN_KEYBOARD_ELEMENT = Module.targetID;
     var gameFile = Module["gameFile"];
