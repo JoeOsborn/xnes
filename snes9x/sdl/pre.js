@@ -54,6 +54,13 @@ Module['listExtraFiles'] = function() {
     return ["battery", "state"];
 }
 
+Module['quit'] = function() {
+    Module.noExitRuntime = false;
+    try { Module.exit(0,false); }
+    catch(e) { }
+    Module.canvas.remove();
+}
+
 Module.preRun.push(function() {
     ENV.SDL_EMSCRIPTEN_KEYBOARD_ELEMENT = Module.targetID;
     var gameFile = Module["gameFile"];
