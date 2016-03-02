@@ -1,11 +1,16 @@
-Module['saveState'] = function(onSaved) {
+Module['saveState'] = function(onSaved, onError) {
+    try {
     gamecip_freeze();
     if(onSaved) {
         onSaved(FS.readFile("/state.frz", {encoding:'binary'}));
     }
+    } catch(e) {
+        if(onError) { onError(e); }
+    }
 }
 
-Module['saveExtraFiles'] = function(files, onSaved) {
+Module['saveExtraFiles'] = function(files, onSaved, onError) {
+    try {
     gamecip_saveSRAM();
     if(onSaved) {
         var r = {};
@@ -18,14 +23,21 @@ Module['saveExtraFiles'] = function(files, onSaved) {
         }
         onSaved(r);
     }
+    } catch(e) {
+        if(onError) { onError(files, e); }
+    }
 }
 
-Module['loadState'] = function(s, onLoaded) {
+Module['loadState'] = function(s, onLoaded, onError) {
+    try {
     //load s in place of "state.frz"
     FS.writeFile("/state.frz", s, {encoding:'binary'});
     gamecip_unfreeze();
     if(onLoaded) {
         onLoaded(s);
+    }
+    } catch(e) {
+        if(onError) { onError(s,e); }
     }
 }
 
