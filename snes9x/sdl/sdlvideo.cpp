@@ -178,7 +178,7 @@ void S9xInitDisplay (int argc, char **argv)
 	 * we just go along with RGB565 for now, nothing else..
 	 */
 
-    GUI.sdl_screen = SDL_SetVideoMode(SNES_WIDTH * GFX_SCALE, SNES_HEIGHT_EXTENDED * GFX_SCALE, BPP, 0);
+    GUI.sdl_screen = SDL_SetVideoMode(SNES_WIDTH * GFX_SCALE, (1+SNES_HEIGHT_EXTENDED) * GFX_SCALE, BPP, 0);
 
     if (GUI.sdl_screen == NULL)
 	{

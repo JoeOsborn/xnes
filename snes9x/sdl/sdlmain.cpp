@@ -586,9 +586,17 @@ extern "C" void saveSRAM() {
 extern "C" void pauseAudio(int n) {
     SDL_PauseAudio(n);
 }
+int firstTime = 1;
 void mainloop(){
     S9xProcessEvents(FALSE);
-    S9xMainLoop();    
+    S9xMainLoop();
+    if(firstTime) {
+      firstTime = 0;
+      bool unfrozen = S9xUnfreezeGame(snapshot_filename);
+      if(!unfrozen) {
+        fprintf(stderr, "Error opening the save state, or no save state provided.\n");
+      }
+    }
 }
 #endif
 
@@ -618,8 +626,7 @@ int main (int argc, char **argv)
 	Settings.StopEmulation = TRUE;
 	Settings.WrongMovieStateProtection = TRUE;
 	Settings.DumpStreamsMaxFrames = -1;
-        Settings.DisplayFrameRate = TRUE;
-        Settings.AutoDisplayMessages = TRUE;
+	Settings.DisplayFrameRate = FALSE;
 	Settings.StretchScreenshots = 1;
 	Settings.SnapshotScreenshots = TRUE;
 	Settings.SkipFrames = 0;
@@ -669,11 +676,6 @@ int main (int argc, char **argv)
 		exit(1);
 	}
   
-  bool unfrozen = S9xUnfreezeGame(snapshot_filename);
-  if(!unfrozen) {
-    fprintf(stderr, "Error opening the save state, or no save state provided.\n");
-  }
-
 	NSRTControllerSetup();
 
 	CPU.Flags = saved_flags;
