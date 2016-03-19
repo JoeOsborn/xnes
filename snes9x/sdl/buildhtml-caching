@@ -11,7 +11,7 @@ if [ ! -e "internals.bc" ]; then
 fi
 
 emcc -O3 -s EXPORTED_FUNCTIONS="['_main', '_freeze', '_unfreeze', '_saveSRAM' ]" --pre-js pre.js --post-js post.js \
- -s MODULARIZE=1 -s EXPORT_NAME=\"'SNES9X'\" -s 'EXTRA_EXPORTED_RUNTIME_METHODS=["FS"]' \
+ -s MODULARIZE=1 -s EXPORT_NAME=\"'SNES9X'\" -s 'EXTRA_EXPORTED_RUNTIME_METHODS=["FS", "SDL"]' \
  -o $OUT/snes9x.js -DUSE_SDL -DHTML $INCLUDES $CCFLAGS internals.bc sdlmain.cpp -lm -lSDL -s TOTAL_MEMORY=34777216 -DSOUND \
 # --closure 1
 

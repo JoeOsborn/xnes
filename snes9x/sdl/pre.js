@@ -62,6 +62,30 @@ Module['quit'] = function() {
 }
 
 Module.preRun.push(function() {
+    SDL.openAudioContext();
+    SDL.realAudioContext = SDL.audioContext;
+    var bufferSize = 16384;
+    var captureNode = SDL.realAudioContext.createScriptProcessor(bufferSize,2,2);
+    SDL.audioContext = {
+        createBufferSource:function() { return SDL.realAudioContext.createBufferSource(); },
+        createBuffer:function(chans,sizePerChan,freq) {
+            return SDL.realAudioContext.createBuffer(chans,sizePerChan,freq);
+        },
+        decodeAudioData:function(buf,onDone) {
+            return SDL.realAudioContext.decodeAudioData(buf,onDone);
+        },
+        createPanner:function() { return SDL.realAudioContext.createPanner(); },
+        createGain:function() { return SDL.realAudioContext.createGain(); },
+        destination:captureNode,
+        get currentTime() { return SDL.realAudioContext.currentTime; }
+    };
+    SDL.audioContext.destination.connect(SDL.realAudioContext.destination);
+    Module["getAudioCaptureInfo"] = function() {
+        return {
+            context:SDL.realAudioContext,
+            capturedNode:SDL.audioContext.destination
+        };
+    }
     ENV.SDL_EMSCRIPTEN_KEYBOARD_ELEMENT = Module.targetID;
     var gameFile = Module["gameFile"];
     var freezeFile = Module["freezeFile"];
@@ -78,7 +102,6 @@ Module.preRun.push(function() {
 });
 
 Module.postRun.push(function() {
-    Module.setMuted(true);
     Module.canvas.style.setProperty( "width", "inherit", "important");
     Module.canvas.style.setProperty("height", "inherit", "important");
 })
