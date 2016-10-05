@@ -573,6 +573,7 @@ extern "C" void freeze() __attribute__((used));
 extern "C" void unfreeze() __attribute__((used));
 extern "C" void saveSRAM() __attribute__((used));
 extern "C" void pauseAudio(int) __attribute__((used));
+extern "C" unsigned char * gamecip_getPTR(int) __attribute__((used));
 
 extern "C" void freeze() {
     S9xFreezeGame(snapshot_filename);
@@ -585,6 +586,16 @@ extern "C" void saveSRAM() {
 }
 extern "C" void pauseAudio(int n) {
     SDL_PauseAudio(n);
+}
+extern "C" unsigned char * gamecip_getPTR(int blockID) {
+  switch(blockID) {
+  case 0: return Memory.RAM;
+  case 1: return Memory.SRAM;
+  case 2: return Memory.VRAM;
+  case 3: return Memory.FillRAM;
+  case 4: return Memory.ROM;
+  default: return NULL;
+  }
 }
 int firstTime = 1;
 void mainloop(){

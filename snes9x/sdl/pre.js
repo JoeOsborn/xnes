@@ -65,7 +65,7 @@ Module.preRun.push(function() {
     SDL.openAudioContext();
     SDL.realAudioContext = SDL.audioContext;
     var bufferSize = 16384;
-    var captureNode = SDL.realAudioContext.createScriptProcessor(bufferSize,2,2);
+    var captureNode = SDL.realAudioContext.createGain();
     SDL.audioContext = {
         createBufferSource:function() { return SDL.realAudioContext.createBufferSource(); },
         createBuffer:function(chans,sizePerChan,freq) {
@@ -100,6 +100,27 @@ Module.preRun.push(function() {
         FS.createPreloadedFile("/", "rom.srm", extraFiles["battery"], true, true);
     }
 });
+
+Module["getMemoryRegions"] = function() {
+    return {
+        RAM:{size:0x20000, idx:0},
+        SRAM:{size:0x20000, idx:1},
+        VRAM:{size:0x10000, idx:2},
+        FillRAM:{size:0x8000, idx:3},
+        ROM:{size:0x800000+0x200, idx:4}
+    };
+}
+
+Module["getBytes"] = function(regionPath, offset, count) {
+    if(typeof regionPath != "string") {
+        if(regionPath.length != 1) {
+            return null;
+        }
+        regionPath = regionPath[0];
+    }
+    var region = Module["getMemoryRegions"](regionPath);
+    return new Uint8Array(Module.HEAPU8.buffer, gamecip_getPTR(region.idx)+offset, count);
+}
 
 Module.postRun.push(function() {
     Module.canvas.style.setProperty( "width", "inherit", "important");
