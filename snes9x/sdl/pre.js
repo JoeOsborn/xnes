@@ -54,12 +54,6 @@ Module['listExtraFiles'] = function() {
     return ["battery", "state"];
 }
 
-Module['quit'] = function() {
-    Module.noExitRuntime = false;
-    try { Module.exit(0,false); }
-    catch(e) { }
-    Module.canvas.remove();
-}
 
 Module.preRun.push(function() {
     SDL.openAudioContext();
@@ -77,7 +71,7 @@ Module.preRun.push(function() {
         createPanner:function() { return SDL.realAudioContext.createPanner(); },
         createGain:function() { return SDL.realAudioContext.createGain(); },
         destination:captureNode,
-        get currentTime() { return SDL.realAudioContext.currentTime; }
+        get currentTime() { return SDL.realAudioContext.currentTime; },
     };
     SDL.audioContext.destination.connect(SDL.realAudioContext.destination);
     Module["getAudioCaptureInfo"] = function() {
@@ -102,8 +96,26 @@ Module.preRun.push(function() {
 });
 
 Module.postRun.push(function() {
-    Module.canvas.style.setProperty( "width", "inherit", "important");
-    Module.canvas.style.setProperty("height", "inherit", "important");
+    //Can't quit without releasing audioContext, and we need SDL around for that. 
+    Module['quit'] = function() {
+        Module.noExitRuntime = false;
+        try { Module.exit(0,false); }
+        catch(e) { }
+        Module.canvas.remove();
+        SDL.realAudioContext.close();
+    }
+    
+    if(Module.enforcedWidth){
+        Module.canvas.style.setProperty("width", Module.enforcedWidth, "important");
+    }else{
+        Module.canvas.style.setProperty( "width", "inherit", "important");
+    }
+
+    if(Module.enforcedHeight){
+        Module.canvas.style.setProperty("height", Module.enforcedHeight, "important");
+    }else{
+        Module.canvas.style.setProperty("height", "inherit", "important");
+    }
 })
 
 // The junk below is to save the emscripten heap and everything. it's not
